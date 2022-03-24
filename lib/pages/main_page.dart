@@ -14,11 +14,11 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   List pages = [
-    ProfilePage(),
-    DashboardPage(),
-    GradePage()
+    const ProfilePage(),
+    const DashboardPage(),
+    const GradePage()
   ];
-  int currentIndex=0;
+  int currentIndex=1;
   void onTap(int index){
     setState(() {
       currentIndex = index;
@@ -38,10 +38,10 @@ class _MainPageState extends State<MainPage> {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         elevation: 0,
-        items: [
-          BottomNavigationBarItem(title: Text("Profile"),icon: Icon(Icons.archive)),
-          BottomNavigationBarItem(title: Text("Home"),icon: Icon(Icons.home)),
-          BottomNavigationBarItem(title: Text("Grade"),icon: Icon(Icons.school)),
+        items: const [
+          BottomNavigationBarItem(label: ("Profile"),icon: Icon(Icons.archive)),
+          BottomNavigationBarItem(label: ("Home"),icon: Icon(Icons.home)),
+          BottomNavigationBarItem(label: ("Grade"),icon: Icon(Icons.school)),
         ],
       ),
     );

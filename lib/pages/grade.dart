@@ -1,60 +1,96 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
 
-class GradePage extends StatelessWidget {
-  const GradePage ({ Key? key }) : super(key: key);
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
+import 'package:ekstrakurikuler/classes/Nilai.dart';
+import 'package:ekstrakurikuler/custom_widgets/NilaiText.dart';
+
+Future<Nilai> getNilaiSiswa() async {
+  final prefs = await SharedPreferences.getInstance();
+  int userID = prefs.getInt('userID') ?? -1;
+
+  final response = await http.get(
+    Uri.parse('http://10.40.5.207:8000/api/getNilaiSiswa/' + userID.toString())
+  );
+
+  if (response.statusCode == 200) {
+    return Nilai.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception('Failed to get data');
+  }
+}
+
+class GradePage extends StatefulWidget {
+  const GradePage({Key? key}) : super(key: key);
+
+  @override
+  State<GradePage> createState() => _GradePageState();
+}
+
+class _GradePageState extends State<GradePage> {
+  late Future<Nilai> futureNilai;
+
+  @override
+  void initState() {
+    super.initState();
+
+    futureNilai = getNilaiSiswa();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Center(
-          child: Column(
-          children: [
-            SizedBox(
-              height: 15,
-            ),
-            Text('REKAP NILAI', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w700, fontFamily: 'Montserrat' )),
-           SizedBox(
-              height: 35,
-            ),
-             Text('86%', style: TextStyle(fontSize: 64, fontWeight: FontWeight.w700, fontFamily: 'Montserrat' )),
-             Text('Airsoft', style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, fontFamily: 'Montserrat' )),
-             Text('Nama Pembina', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300, fontFamily: 'Montserrat' )),
-          SizedBox(
-              height: 65,
-            ),
-             Text('Belum Dinilai', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w600, fontFamily: 'Montserrat' )),
-             Text('Pecinta Alam', style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, fontFamily: 'Montserrat' )),
-             Text('Nama Pembina', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300, fontFamily: 'Montserrat' )),
-          SizedBox(
-              height: 65,
-            ),
-          Container(
-          child: Stack(
-          children: <Widget>[
-            Image(
-              height: 173,
-              width: 410,
-              fit: BoxFit.fill,
-              image: AssetImage('assets/vector.png'),
-            ),
-            Positioned(
-              child: Center(
-                child: Column(
+    var size = MediaQuery.of(context).size;
+    return SafeArea(
+        child: FutureBuilder<Nilai>(
+          future: futureNilai,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return Stack(
+                alignment: Alignment.bottomCenter,
                 children: <Widget>[
-                  Text('98%', style: TextStyle(fontSize: 64, fontWeight: FontWeight.w700, fontFamily: 'Montserrat' )),
-                  Text('Pramuka (Wajib)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, fontFamily: 'Montserrat' )),
-                  Text('Nama Pembina', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300, fontFamily: 'Montserrat' )),
+                  const Positioned(
+                    child: Image(     
+                      height: 200,
+                      fit: BoxFit.fitHeight,
+                      image: AssetImage('assets/BG.png'),
+                      alignment: Alignment.bottomCenter,
+                    ),
+                  ),  
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Column(
+                          children: <Widget>[
+                            const SizedBox(
+                              height: 35,
+                            ),
+                            const Text('REKAP NILAI',
+                              style: TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Montserrat'
+                              )
+                            ),                
+                            const SizedBox(
+                              height: 35,
+                            ),
+                            for (var item in snapshot.data!.nilai) NilaiText(nilai: item.nilai.toString(), ekstra: item.ekstra, pembina: item.pembimbing)
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
-              ),
-            ),
-           ),
-          ],
-         ),
-         ),  
-        ],
-      ),
-    ),
+              );
+            }
+
+            return const CircularProgressIndicator();
+          },
+        ) 
     );
   }
 }
